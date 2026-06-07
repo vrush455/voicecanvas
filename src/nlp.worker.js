@@ -127,9 +127,13 @@ function normalizeEntities(rawEntities) {
   return merged
     .filter(e => {
       const clean = e.label.trim();
-      // Filter out short artifacts and duplicates (case-insensitive)
       const key = clean.toLowerCase();
-      if (clean.length <= 2 || seen.has(key)) return false;
+      // Filter junk: too short, duplicates, or contains digits/symbols
+      if (clean.length <= 3) return false;
+      if (seen.has(key)) return false;
+      // Filter partial tokens that look like "pElon" or "PSEE" —
+      // real entities don't start with a lowercase letter after a capital
+      if (/^[A-Z][a-z]?[A-Z]/.test(clean)) return false;
       seen.add(key);
       return true;
     })

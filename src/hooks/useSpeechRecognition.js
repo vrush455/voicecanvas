@@ -297,8 +297,8 @@ export function useSpeechRecognition({
       onTranscriptUpdate?.(displayText, { interimText, finalText });
 
       // Feed the throttle buffer
-      if (finalText)   processSpeechToken(finalText, true);
-      if (interimText) processSpeechToken(interimText, false);
+      if (finalText) processSpeechToken(finalText, true);
+// Remove the interimText line entirely — only process final results
     };
 
     // ── Event: speech errors ─────────────────────────────────────────────────
