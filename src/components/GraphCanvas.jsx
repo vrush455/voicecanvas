@@ -3,10 +3,16 @@ import * as d3 from "d3";
 
 // Color map: entity type → node color
 const GROUP_COLORS = {
+  // From App.jsx ENTITY_COLOR_GROUP mapping
   person:       "#8B5CF6", // violet
   location:     "#10B981", // emerald
   organisation: "#F59E0B", // amber
   misc:         "#6366F1", // indigo
+  // Direct BERT labels as fallback
+  PER:  "#8B5CF6",
+  LOC:  "#10B981",
+  ORG:  "#F59E0B",
+  MISC: "#6366F1",
 };
 
 export default function GraphCanvas({ nodes, edges }) {
@@ -180,6 +186,32 @@ export default function GraphCanvas({ nodes, edges }) {
     <div className="relative flex-1 h-full bg-gray-950">
       <svg ref={svgRef} className="w-full h-full" />
 
+      {/* Zoom controls */}
+      <div className="absolute bottom-20 right-4 flex flex-col gap-1">
+        {[["＋", 1.4], ["－", 0.7], ["⊙", null]].map(([label, factor]) => (
+          <button
+            key={label}
+            onClick={() => {
+              const svg = d3.select(svgRef.current);
+              if (factor === null) {
+                // Reset zoom
+                svg.transition().duration(400).call(
+                  d3.zoom().transform,
+                  d3.zoomIdentity
+                );
+              } else {
+                svg.transition().duration(300).call(
+                  d3.zoom().scaleBy,
+                  factor
+                );
+              }
+            }}
+            className="w-8 h-8 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-md text-sm font-medium transition-colors flex items-center justify-center"
+          >
+            {label}
+          </button>
+        ))}
+      </div>
       {nodes.length === 0 && (
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none">
           <p className="text-gray-700 text-sm">Speak to grow your knowledge graph</p>
@@ -188,16 +220,21 @@ export default function GraphCanvas({ nodes, edges }) {
       )}
 
       {/* Legend */}
-      {nodes.length > 0 && (
-        <div className="absolute top-4 right-4 flex flex-col gap-1.5 bg-gray-900/80 backdrop-blur px-3 py-2 rounded-lg border border-gray-800">
-          {Object.entries(GROUP_COLORS).map(([type, color]) => (
-            <div key={type} className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
-              <span className="text-xs text-gray-400 capitalize">{type}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+{nodes.length > 0 && (
+  <div className="absolute top-4 right-4 flex flex-col gap-1.5 bg-gray-900/80 backdrop-blur px-3 py-2 rounded-lg border border-gray-800">
+    {[
+      ["person", "#8B5CF6", "Person"],
+      ["location", "#10B981", "Location"],
+      ["organisation", "#F59E0B", "Organisation"],
+      ["misc", "#6366F1", "Misc"],
+    ].map(([, color, label]) => (
+      <div key={label} className="flex items-center gap-2">
+        <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
+        <span className="text-xs text-gray-400">{label}</span>
+      </div>
+    ))}
+  </div>
+)}
+</div>
   );
 }

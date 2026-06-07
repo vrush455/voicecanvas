@@ -298,7 +298,6 @@ export function useSpeechRecognition({
 
       // Feed the throttle buffer
       if (finalText) processSpeechToken(finalText, true);
-// Remove the interimText line entirely — only process final results
     };
 
     // ── Event: speech errors ─────────────────────────────────────────────────

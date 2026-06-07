@@ -164,7 +164,7 @@ export default function App() {
         </div>
       )}
 
-      <TranscriptPanel transcript={transcript} isListening={isListening} />
+      <TranscriptPanel transcript={transcript} isListening={isListening} nodeCount={nodes.length} />
 
       <GraphCanvas nodes={nodes} edges={edges} />
 
