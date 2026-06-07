@@ -20,7 +20,12 @@ const ENTITY_COLOR_GROUP = {
   MISC: "misc",
 };
 
+// Tracks the last node added — used to chain batches together
+let lastNodeId = null;
+
 function updateGraphFromEntities(entities, setNodes, setEdges) {
+  if (!entities.length) return;
+
   setNodes(prev => {
     const existingIds = new Set(prev.map(n => n.id));
     const newNodes = entities
@@ -35,14 +40,36 @@ function updateGraphFromEntities(entities, setNodes, setEdges) {
   });
 
   setEdges(prev => {
-    const newEdges = entities.slice(1).map((e, i) => ({
-      source: entities[i].id,
-      target: e.id,
-      id:     `${entities[i].id}--${e.id}`,
-    }));
     const existingEdgeIds = new Set(prev.map(edge => edge.id));
-    const uniqueNew = newEdges.filter(edge => !existingEdgeIds.has(edge.id));
-    return uniqueNew.length > 0 ? [...prev, ...uniqueNew] : prev;
+    const newEdges = [];
+
+    // Connect entities within this batch
+    entities.slice(1).forEach((e, i) => {
+      const edge = {
+        source: entities[i].id,
+        target: e.id,
+        id:     `${entities[i].id}--${e.id}`,
+      };
+      if (!existingEdgeIds.has(edge.id)) newEdges.push(edge);
+    });
+
+    // Connect last node from PREVIOUS batch to first node of THIS batch
+    // WHY: entities arrive in separate NER calls. Without this bridge,
+    // each batch is an isolated island. This one edge stitches the whole
+    // graph into one connected network.
+    if (lastNodeId && lastNodeId !== entities[0].id) {
+      const bridgeEdge = {
+        source: lastNodeId,
+        target: entities[0].id,
+        id:     `${lastNodeId}--${entities[0].id}`,
+      };
+      if (!existingEdgeIds.has(bridgeEdge.id)) newEdges.push(bridgeEdge);
+    }
+
+    // Update the tracker
+    lastNodeId = entities[entities.length - 1].id;
+
+    return newEdges.length > 0 ? [...prev, ...newEdges] : prev;
   });
 }
 
